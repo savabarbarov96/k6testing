@@ -1,0 +1,32 @@
+name: k6 Performance Test
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  k6-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install k6
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg software-properties-common
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 33C235A34C46AA3FFB293709A328C3A2C3C45C06
+          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      - name: Run k6 test
+        run: k6 run k6-prelogin-test.js || true
+        # Allow failure so workflow doesn't fail if endpoints are down
+
+      - name: Upload k6 HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-summary-report
+          path: summary.html 
